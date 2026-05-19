@@ -1,0 +1,41 @@
+name: Build symboliclink-testing-tools
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        configuration: [Release]
+        platform: [x64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore packages
+        run: nuget restore symboliclink-testing-tools.sln
+
+      - name: Build solution
+        run: |
+          msbuild symboliclink-testing-tools.sln ^
+            /p:Configuration=${{ matrix.configuration }} ^
+            /p:Platform=${{ matrix.platform }} ^
+            /m
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: symboliclink-testing-tools
+          path: |
+            **\bin\${{ matrix.platform }}\${{ matrix.configuration }}\*.exe
